@@ -31,4 +31,4 @@ pip install requests
 # AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********
 
 # EJECUCION
-python3 xonichat.py
+python3 start.py
