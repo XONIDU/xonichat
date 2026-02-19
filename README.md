@@ -108,8 +108,8 @@ XONICHAT - Hasta luego
 ```
 # Tus API keys de Gemini (una por línea)
 # Las líneas que empiezan con # son ignoradas
-AIzaSyCH5JpDDvI7gE87FN7iDUG5a78JFQeLXq4
-AIzaSyDYOETiQqB7od-Mzs_qC99vk9n4fcGFV0c
+AIzaSyCH5JpDDvI7gE87FN7iDUG5a78********
+AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********
 ```
 
 ## ⚠️ Límites gratuitos de Gemini
