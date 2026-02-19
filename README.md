@@ -60,7 +60,7 @@ pip install requests
 
 3. **Ejecuta**:
    ```bash
-   python3 xonichat.py
+   python3 start.py
    ```
 
 ## 🎮 Uso
@@ -135,7 +135,7 @@ AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********
 
 ```
 xonichat/
-├── xonichat.py      # Programa principal
+├── start.py      # Programa principal
 ├── keys.txt         # API keys (crear manualmente)
 └── README.md        # Este archivo
 ```
