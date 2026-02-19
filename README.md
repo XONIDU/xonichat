@@ -54,8 +54,8 @@ pip install requests
    ```
    Agrega tus API keys (una por línea):
    ```
-   AIzaSyCH5JpDDvI7gE87FN7iDUG5a78JFQeLXq4
-   AIzaSyDYOETiQqB7od-Mzs_qC99vk9n4fcGFV0c
+   AIzaSyCH5JpDDvI7gE87FN7iDUG5a78********
+   AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********
    ```
 
 3. **Ejecuta**:
