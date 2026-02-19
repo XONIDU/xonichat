@@ -101,7 +101,6 @@ Keys disponibles: 2
 [G1/2] >>> /salir
 XONICHAT - Hasta luego
 ```
-
 ## 📝 Archivo de configuración
 
 ### `keys.txt`
