@@ -48,7 +48,7 @@ https://aistudio.google.com/app/apikey
 3. Agrega tus API keys (una por linea)
 
 ### 4. Ejecutar
-python3 xonichat.py
+python3 start.py
 
 ## Uso
 
@@ -58,7 +58,7 @@ python3 xonichat.py
 
 ## Archivos
 
-- `xonichat.py` - Programa principal
+- `start.py` - Programa principal
 - `keys.txt` - API keys (crear manualmente)
 
 ## Creditos
