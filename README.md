@@ -22,6 +22,7 @@ Cliente de chat por terminal para Google Gemini, diseñado para ser ligero y fun
 
 ### 1. Instalar dependencias
 
+```
 # En antiX/Debian/Ubuntu
 sudo apt update
 sudo apt install python3 python3-pip -y
@@ -47,10 +48,8 @@ https://aistudio.google.com/app/apikey
 3. Agrega tus API keys (una por linea)
 
 ### 4. Ejecutar
-
-```
 python3 xonichat.py
-
+```
 ## Uso
 
 - Escribe tu mensaje y presiona Enter
