@@ -49,7 +49,7 @@ https://aistudio.google.com/app/apikey
 
 ### 4. Ejecutar
 python3 xonichat.py
-```
+
 ## Uso
 
 - Escribe tu mensaje y presiona Enter
