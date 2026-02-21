@@ -1,4 +1,5 @@
 # XONICHAT - Cliente Gemini para Terminal
+# Darian Alberto Camacho Salas
 
 Cliente de chat por terminal para Google Gemini, diseñado para ser ligero y funcionar en equipos de bajos recursos. Soporta múltiples API keys y cambio automático cuando una se agota.
 
