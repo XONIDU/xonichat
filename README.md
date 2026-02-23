@@ -1,80 +1,64 @@
-# XONICHAT - Cliente Gemini para Terminal
-# Darian Alberto Camacho Salas
+# XONICHAT 🚀
 
-Cliente de chat por terminal para Google Gemini, diseñado para ser ligero y funcionar en equipos de bajos recursos. Soporta múltiples API keys y cambio automático cuando una se agota.
+A terminal-based Gemini client optimized for low-resource devices (ASUS Eee PC, etc.)
 
-## Características
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
 
-- Cliente 100% terminal - Interfaz ligera y rápida
-- Soporte para Google Gemini
-- Múltiples API keys con cambio automático
-- Historial de conversación contextual
-- Optimizado para equipos de bajos recursos
-- Sin dependencias pesadas
+## 📋 Description
+XONICHAT is a lightweight Google Gemini client that runs entirely in the terminal.
+Ideal for resource-constrained devices.
 
-## Requisitos
+## ✨ Features
+- ✅ 100% terminal interface - Fast and lightweight
+- ✅ Multiple API keys - Automatic switching when one is exhausted
+- ✅ Conversation history - Context between messages
+- ✅ Optimized - Runs on ASUS Eee PC and similar devices
 
-- Python 3.6+
-- pip (gestor de paquetes de Python)
-- Conexión a internet
-- API key de Google Gemini
+## ⚙️ Quick Installation
 
-## Instalación
-
-### 1. Instalar dependencias
-
-```
-# En antiX/Debian/Ubuntu
-sudo apt update
-sudo apt install python3 python3-pip -y
-pip3 install requests
-
-# En Arch Linux
-sudo pacman -S python-pip
+```bash
+# 1. Install dependency
 pip install requests
 
-# En cualquier sistema con pip
-pip install requests
-```
+# 2. Clone the repository
+git clone https://github.com/yourusername/xonichat
+cd xonichat
 
-### 2. Obtener API key de Gemini
+# 3. Configure API keys (see section below)
 
-Las API keys se obtienen gratuitamente en:
+🔑 Getting Gemini API Keys
+
+Get your free API keys at:
 https://aistudio.google.com/app/apikey
+Configure keys.txt
 
-### 3. Configurar XONICHAT
+Create a keys.txt file in the same folder with your API keys (one per line):
+txt
 
-1. Guarda el codigo como `xonichat.py`
-2. Crea el archivo `keys.txt` en la misma carpeta
-3. Agrega tus API keys (una por linea)
+# Your Gemini API keys (one per line)
+AIzaSyCH5JpDDvI7gE87FN7iDUG5a78********
+AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********
 
-### 4. Ejecutar
+🚀 Usage
+bash
+
 python3 start.py
 
-## Uso
+    Type your message and press Enter
 
-- Escribe tu mensaje y presiona Enter
-- Escribe `/salir` para terminar la conversacion
-- El programa cambia automaticamente de key cuando una se agota
+    Type /salir to exit
 
-## Archivos
+    The program automatically switches keys when one runs out of quota
 
-- `start.py` - Programa principal
-- `keys.txt` - API keys (crear manualmente)
+📁 Files
 
-## Creditos
+    start.py - Main program
 
-**BY: XONIDU - Darian Alberto Camacho Salas**
+    keys.txt - API keys (create manually)
 
-## Contacto
+👤 Author
 
-Email: xonidu@gmail.com
+Darian Alberto Camacho Salas (XONIDU)
 
-## Licencia
-
-Proyecto de codigo abierto.
-
----
-
-*Optimizado para ASUS Eee PC y equipos de bajos recursos*
-
+    Email: xonidu@gmail.com
