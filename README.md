@@ -41,11 +41,11 @@ bash
 ```
 python3 start.py
 ```
-    Type your message and press Enter
+Type your message and press Enter
 
-    Type /salir to exit
+Type /salir to exit
 
-    The program automatically switches keys when one runs out of quota
+The program automatically switches keys when one runs out of quota
 
 📁 Files
 
