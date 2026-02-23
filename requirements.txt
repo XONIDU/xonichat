@@ -1,0 +1,34 @@
+# XONICHAT - REQUIREMENTS
+# Creator: Darian Alberto Camacho Salas
+
+# PYTHON DEPENDENCIES
+requests
+
+# INSTALLATION COMMANDS BY OPERATING SYSTEM
+
+# Arch Linux
+sudo pacman -S python-pip
+pip install requests --break-system-packages
+
+# antiX, Debian, Ubuntu and derivatives
+sudo apt update
+sudo apt install python3 python3-pip -y
+pip3 install requests --break-system-packages
+
+# Windows
+pip install requests
+
+# HOW TO GET A FREE API KEY
+# 1. Go to: https://aistudio.google.com/app/apikey
+# 2. Sign in with Google account
+# 3. Create a new API key
+# 4. Copy the key (starts with AIza...)
+
+# CONFIGURATION FILE keys.txt
+# Create a keys.txt file with your API keys (one per line)
+# Example:
+# AIzaSyCH5JpDDvI7gE87FN7iDUG5a78********
+# AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********
+
+# EXECUTION
+python3 start.py
