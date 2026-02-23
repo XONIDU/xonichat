@@ -17,7 +17,6 @@ Ideal for resource-constrained devices.
 
 ## ⚙️ Quick Installation
 
-```bash
 # 1. Install dependency
 pip install requests
 
