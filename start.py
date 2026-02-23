@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-"""
-XONICHAT - Terminal Gemini Client
-Unlimited response version
-BY: XONIDU - Darian Alberto Camacho Salas
-"""
-
 import os
 import sys
 import time
