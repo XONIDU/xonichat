@@ -49,9 +49,9 @@ The program automatically switches keys when one runs out of quota
 
 📁 Files
 
-    start.py - Main program
+start.py - Main program
 
-    keys.txt - API keys (create manually)
+keys.txt - API keys (create manually)
 
 👤 Author
 
