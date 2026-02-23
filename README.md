@@ -2,9 +2,6 @@
 
 A terminal-based Gemini client optimized for low-resource devices (ASUS Eee PC, etc.)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
-
 ## 📋 Description
 XONICHAT is a lightweight Google Gemini client that runs entirely in the terminal.
 Ideal for resource-constrained devices.
@@ -21,7 +18,7 @@ Ideal for resource-constrained devices.
 pip install requests
 
 # 2. Clone the repository
-git clone https://github.com/yourusername/xonichat
+git clone https://github.com/xonidu/xonichat
 cd xonichat
 
 # 3. Configure API keys (see section below)
@@ -41,9 +38,9 @@ AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********
 
 🚀 Usage
 bash
-
+```
 python3 start.py
-
+```
     Type your message and press Enter
 
     Type /salir to exit
