@@ -39,6 +39,10 @@ AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********
 🚀 Usage
 bash
 ```
+python start.py
+
+#o
+
 python3 start.py
 ```
 Type your message and press Enter
