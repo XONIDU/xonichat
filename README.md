@@ -1,4 +1,4 @@
-# XONICHAT 🚀
+# XONICHAT v4.2.0
 
 A terminal-based Gemini client optimized for low-resource devices (ASUS Eee PC, etc.)
 
@@ -80,3 +80,4 @@ Darian Alberto Camacho Salas (XONIDU)
 
 Email: xonidu@gmail.com
 
+## SOMOS XONIDU v4.2.0
