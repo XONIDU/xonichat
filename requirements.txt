@@ -4,7 +4,7 @@
 # PYTHON DEPENDENCIES
 requests
 
-# INSTALLATION COMMANDS BY OPERATING SYSTEM
+# INSTALLATION COMMANDS
 
 # Arch Linux
 sudo pacman -S python-pip
