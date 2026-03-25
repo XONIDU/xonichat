@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
-XONICHAT 2026 - Lanzador Universal de Cliente Gemini para Terminal
-Este script ejecuta xonichat.py y verifica dependencias
-Desarrollado por: Darian Alberto Camacho Salas
+#XONICHAT 2026 - Lanzador Universal de Cliente Gemini para Terminal
+#Este script ejecuta xonichat.py y verifica dependencias
+#Desarrollado por: Darian Alberto Camacho Salas
 #Somos XONINDU
 """
 
