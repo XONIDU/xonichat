@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
-#XONICHAT 2026 - Lanzador Universal de Cliente Gemini para Terminal
-#Este script ejecuta xonichat.py y verifica dependencias
-#Desarrollado por: Darian Alberto Camacho Salas
+XONICHAT 2026 - Lanzador Universal de Cliente Gemini para Terminal
+Este script ejecuta xonichat.py y verifica dependencias
+Desarrollado por: Darian Alberto Camacho Salas
 #Somos XONINDU
 """
 
@@ -71,6 +71,8 @@ def get_linux_distro():
                     return 'manjaro'
                 elif 'mint' in content:
                     return 'mint'
+                elif 'opensuse' in content or 'suse' in content:
+                    return 'opensuse'
         return 'linux-generico'
     except:
         return 'linux-generico'
@@ -85,6 +87,71 @@ def get_python_command():
             return ['python3']
         except:
             return ['python']
+
+def check_pip():
+    """Verifica si pip está instalado"""
+    try:
+        cmd = [sys.executable, '-m', 'pip', '--version']
+        subprocess.run(cmd, capture_output=True, check=True)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+def install_pip_linux():
+    """Instala pip en Linux según la distribución detectada"""
+    distro = get_linux_distro()
+    print(f"{Colors.BOLD}Instalando pip en {distro}...{Colors.END}")
+    
+    if distro in ['ubuntu', 'debian', 'mint', 'antix']:
+        try:
+            subprocess.run(['sudo', 'apt', 'update'], check=False)
+            subprocess.run(['sudo', 'apt', 'install', '-y', 'python3-pip'], check=True)
+            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
+            return True
+        except:
+            print(f"{Colors.RED}Error instalando pip con apt{Colors.END}")
+            return False
+    
+    elif distro in ['arch', 'manjaro']:
+        try:
+            subprocess.run(['sudo', 'pacman', '-S', '--noconfirm', 'python-pip'], check=True)
+            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
+            return True
+        except:
+            print(f"{Colors.RED}Error instalando pip con pacman{Colors.END}")
+            return False
+    
+    elif distro in ['fedora']:
+        try:
+            subprocess.run(['sudo', 'dnf', 'install', '-y', 'python3-pip'], check=True)
+            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
+            return True
+        except:
+            print(f"{Colors.RED}Error instalando pip con dnf{Colors.END}")
+            return False
+    
+    elif distro in ['centos']:
+        try:
+            subprocess.run(['sudo', 'yum', 'install', '-y', 'python3-pip'], check=True)
+            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
+            return True
+        except:
+            print(f"{Colors.RED}Error instalando pip con yum{Colors.END}")
+            return False
+    
+    elif distro in ['opensuse']:
+        try:
+            subprocess.run(['sudo', 'zypper', 'install', '-y', 'python3-pip'], check=True)
+            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
+            return True
+        except:
+            print(f"{Colors.RED}Error instalando pip con zypper{Colors.END}")
+            return False
+    
+    else:
+        print(f"{Colors.YELLOW}Distribución no reconocida. Instala pip manualmente.{Colors.END}")
+        print("Consulta: https://pip.pypa.io/en/stable/installation/")
+        return False
 
 def print_banner():
     """Muestra el banner de XONICHAT"""
@@ -355,6 +422,22 @@ def main():
                                    capture_output=True, text=True).stdout.strip()
     print(f"{Colors.BOLD}Python:{Colors.END} {python_version}")
     print(f"{Colors.BOLD}Directorio:{Colors.END} {os.path.dirname(os.path.abspath(__file__))}")
+    
+    # Verificar pip e instalarlo si es necesario (solo Linux)
+    if get_system() == 'linux' and not check_pip():
+        print(f"\n{Colors.YELLOW}pip no esta instalado{Colors.END}")
+        respuesta = input("¿Deseas instalar pip automaticamente? (s/n): ")
+        if respuesta.lower() == 's':
+            if install_pip_linux():
+                print(f"{Colors.GREEN}pip instalado correctamente. Continuando...{Colors.END}")
+            else:
+                print(f"{Colors.RED}No se pudo instalar pip. Instalalo manualmente.{Colors.END}")
+                input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
+                return
+        else:
+            print("No se puede continuar sin pip. Instalalo manualmente.")
+            input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
+            return
     
     # Verificar dependencias
     faltantes = check_dependencies()
