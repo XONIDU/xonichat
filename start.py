@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 """
-XONICHAT 2026 - Lanzador Universal de Cliente Gemini para Terminal
-Este script ejecuta xonichat.py y verifica dependencias
-Desarrollado por: Darian Alberto Camacho Salas
-#Somos XONINDU
+XONICHAT 2026 - Lanzador Universal (Robusto)
+Cliente Gemini desde terminal para equipos de bajos recursos
+Incluye instalación automática de pip, requests y manejo de API keys
+Desarrollador: Darian Alberto Camacho Salas
+Organización: XONIDU
 """
 
 import subprocess
@@ -13,22 +14,23 @@ import sys
 import os
 import platform
 import shutil
-import importlib.util
 import time
+from pathlib import Path
 
+# ============================================================================
 # Colores para terminal
+# ============================================================================
 class Colors:
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
     GREEN = '\033[92m'
     YELLOW = '\033[93m'
     RED = '\033[91m'
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
     END = '\033[0m'
     BOLD = '\033[1m'
     
     @staticmethod
     def supports_color():
-        """Verifica si la terminal soporta colores"""
         if platform.system() == 'Windows':
             try:
                 import ctypes
@@ -38,47 +40,49 @@ class Colors:
                 return False
         return True
 
-# Desactivar colores si no hay soporte
 if not Colors.supports_color():
     for attr in dir(Colors):
         if not attr.startswith('_') and attr != 'supports_color':
             setattr(Colors, attr, '')
 
+# ============================================================================
+# Detección del sistema
+# ============================================================================
 def get_system():
-    """Detecta el sistema operativo"""
     return platform.system().lower()
 
 def get_linux_distro():
-    """Detecta la distribucion de Linux"""
     if get_system() != 'linux':
         return None
-    
     try:
         if os.path.exists('/etc/os-release'):
             with open('/etc/os-release', 'r') as f:
                 content = f.read().lower()
-                if 'ubuntu' in content:
-                    return 'ubuntu'
-                elif 'debian' in content:
-                    return 'debian'
+                if 'ubuntu' in content or 'debian' in content or 'mint' in content or 'antix' in content:
+                    return 'debian-based'
+                elif 'arch' in content or 'manjaro' in content:
+                    return 'arch-based'
                 elif 'fedora' in content:
                     return 'fedora'
-                elif 'centos' in content:
+                elif 'centos' in content or 'rhel' in content:
                     return 'centos'
-                elif 'arch' in content:
-                    return 'arch'
-                elif 'manjaro' in content:
-                    return 'manjaro'
-                elif 'mint' in content:
-                    return 'mint'
-                elif 'opensuse' in content or 'suse' in content:
+                elif 'opensuse' in content:
                     return 'opensuse'
+        if shutil.which('apt'):
+            return 'debian-based'
+        elif shutil.which('pacman'):
+            return 'arch-based'
+        elif shutil.which('dnf'):
+            return 'fedora'
+        elif shutil.which('yum'):
+            return 'centos'
+        elif shutil.which('zypper'):
+            return 'opensuse'
         return 'linux-generico'
     except:
         return 'linux-generico'
 
 def get_python_command():
-    """Obtiene el comando Python correcto"""
     if get_system() == 'windows':
         return ['python']
     else:
@@ -88,100 +92,92 @@ def get_python_command():
         except:
             return ['python']
 
-def check_pip():
-    """Verifica si pip está instalado"""
-    try:
-        cmd = [sys.executable, '-m', 'pip', '--version']
-        subprocess.run(cmd, capture_output=True, check=True)
-        return True
-    except subprocess.CalledProcessError:
-        return False
+def get_pip_command():
+    return [sys.executable, '-m', 'pip']
 
-def install_pip_linux():
-    """Instala pip en Linux según la distribución detectada"""
-    distro = get_linux_distro()
-    print(f"{Colors.BOLD}Instalando pip en {distro}...{Colors.END}")
-    
-    if distro in ['ubuntu', 'debian', 'mint', 'antix']:
-        try:
-            subprocess.run(['sudo', 'apt', 'update'], check=False)
-            subprocess.run(['sudo', 'apt', 'install', '-y', 'python3-pip'], check=True)
-            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
-            return True
-        except:
-            print(f"{Colors.RED}Error instalando pip con apt{Colors.END}")
-            return False
-    
-    elif distro in ['arch', 'manjaro']:
-        try:
-            subprocess.run(['sudo', 'pacman', '-S', '--noconfirm', 'python-pip'], check=True)
-            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
-            return True
-        except:
-            print(f"{Colors.RED}Error instalando pip con pacman{Colors.END}")
-            return False
-    
-    elif distro in ['fedora']:
-        try:
-            subprocess.run(['sudo', 'dnf', 'install', '-y', 'python3-pip'], check=True)
-            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
-            return True
-        except:
-            print(f"{Colors.RED}Error instalando pip con dnf{Colors.END}")
-            return False
-    
-    elif distro in ['centos']:
-        try:
-            subprocess.run(['sudo', 'yum', 'install', '-y', 'python3-pip'], check=True)
-            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
-            return True
-        except:
-            print(f"{Colors.RED}Error instalando pip con yum{Colors.END}")
-            return False
-    
-    elif distro in ['opensuse']:
-        try:
-            subprocess.run(['sudo', 'zypper', 'install', '-y', 'python3-pip'], check=True)
-            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
-            return True
-        except:
-            print(f"{Colors.RED}Error instalando pip con zypper{Colors.END}")
-            return False
-    
-    else:
-        print(f"{Colors.YELLOW}Distribución no reconocida. Instala pip manualmente.{Colors.END}")
-        print("Consulta: https://pip.pypa.io/en/stable/installation/")
-        return False
-
-def print_banner():
-    """Muestra el banner de XONICHAT"""
+def get_install_flags():
+    flags = []
     sistema = get_system()
     distro = get_linux_distro()
+    if sistema == 'linux':
+        if distro in ['arch-based', 'fedora']:
+            flags.append('--break-system-packages')
+        else:
+            flags.append('--user')
+    elif sistema == 'darwin':
+        flags.append('--user')
+    return flags
+
+def get_script_dir():
+    """Obtiene el directorio donde está guardado este script (start.py)"""
+    return os.path.dirname(os.path.abspath(__file__))
+
+def get_fixed_xonichat_dir():
+    """Devuelve la ruta fija /home/usuario/xonichat/"""
+    usuario = os.path.expanduser("~")
+    nombre_usuario = os.path.basename(usuario)
+    return os.path.join('/home', nombre_usuario, 'xonichat')
+
+def get_xonichat_path():
+    """
+    Detecta la ruta de xonichat.py:
+    1. Primero busca en el mismo directorio que start.py
+    2. Si no, usa la ruta fija /home/usuario/xonichat/
+    """
+    script_dir = get_script_dir()
+    ruta_local = os.path.join(script_dir, 'xonichat.py')
     
+    if os.path.exists(ruta_local):
+        return ruta_local, 'local'
+    
+    ruta_fija = os.path.join(get_fixed_xonichat_dir(), 'xonichat.py')
+    if os.path.exists(ruta_fija):
+        return ruta_fija, 'fija'
+    
+    # Si no existe en ningún lado, devolvemos la local como predeterminada
+    return ruta_local, 'ninguna'
+
+def get_xonichat_dir():
+    """Devuelve el directorio donde está xonichat.py"""
+    ruta, _ = get_xonichat_path()
+    return os.path.dirname(ruta)
+
+def print_banner():
+    sistema = get_system()
+    distro = get_linux_distro()
+    ruta_xonichat, origen = get_xonichat_path()
     sistema_texto = {
         'windows': 'WINDOWS',
         'linux': f'LINUX ({distro.upper()})' if distro else 'LINUX',
         'darwin': 'MACOS'
     }.get(sistema, 'DESCONOCIDO')
     
+    origen_texto = {
+        'local': 'MISMO DIRECTORIO',
+        'fija': '/HOME/USUARIO/XONICHAT',
+        'ninguna': 'NO ENCONTRADO'
+    }.get(origen, 'DESCONOCIDO')
+    
     banner = f"""
-{Colors.BLUE}{Colors.BOLD}═══════════════════════════════════════════════════════════
-                    XONICHAT 2026 v4.2.0                    
-              Cliente Gemini para Terminal            
-              Optimizado para equipos de bajos recursos       
-              ASUS Eee PC, antiX Linux, Termux                
-                                                          
-              Sistema detectado: {sistema_texto}            
-                                                          
-              Desarrollado por: Darian Alberto            
-              Camacho Salas                               
-              #Somos XONINDU
-═══════════════════════════════════════════════════════════{Colors.END}
+{Colors.PURPLE}{Colors.BOLD}╔══════════════════════════════════════════════════════════╗
+║                    XONICHAT 2026 v4.2.0                    ║
+║              Cliente Gemini para Terminal                   ║
+║                   Optimizado para 1GB RAM                   ║
+║                                                            ║
+║               Sistema detectado: {sistema_texto:<27} ║
+║               Origen xonichat.py: {origen_texto:<27} ║
+║                                                            ║
+║               Desarrollado por: Darian Alberto             ║
+║                      Camacho Salas                         ║
+║                      Organización: XONIDU                  ║
+╚══════════════════════════════════════════════════════════════╝{Colors.END}
     """
     print(banner)
 
+# ============================================================================
+# Verificación e instalación de pip
+# ============================================================================
 def check_python():
-    """Verifica Python instalado"""
     try:
         cmd = get_python_command() + ['--version']
         subprocess.run(cmd, capture_output=True, check=True)
@@ -189,123 +185,139 @@ def check_python():
     except:
         return False
 
-def check_command(comando):
-    """Verifica si un comando existe"""
-    return shutil.which(comando) is not None
-
-def check_python_module(module_name):
-    """Verifica si un modulo de Python esta instalado"""
-    return importlib.util.find_spec(module_name) is not None
-
-def check_dependencies():
-    """Verifica las dependencias de Python necesarias"""
-    print(f"\n{Colors.BOLD}Verificando dependencias de Python...{Colors.END}")
-    
-    dependencias = [
-        ('requests', 'requests', 'Peticiones HTTP', 'requests'),
-    ]
-    
-    faltantes = []
-    
-    for modulo, paquete, desc, import_name in dependencias:
-        if check_python_module(import_name):
-            print(f"{Colors.GREEN}  - {modulo}: OK{Colors.END}")
-        else:
-            print(f"{Colors.YELLOW}  - {modulo}: FALTANTE{Colors.END}")
-            faltantes.append(paquete)
-    
-    return faltantes
-
-def install_dependencies(faltantes):
-    """Instala las dependencias faltantes"""
-    if not faltantes:
+def check_pip():
+    try:
+        cmd = get_pip_command() + ['--version']
+        subprocess.run(cmd, capture_output=True, check=True)
         return True
-    
-    print(f"\n{Colors.BOLD}Instalando dependencias faltantes...{Colors.END}")
-    
-    sistema = get_system()
-    distro = get_linux_distro()
-    
-    # Instalar paquetes Python
-    if faltantes:
-        print(f"Paquetes Python a instalar: {', '.join(faltantes)}")
-        
-        # Construir comando de instalacion
-        cmd = [sys.executable, '-m', 'pip', 'install']
-        
-        # Agregar opciones segun sistema
-        if sistema == 'linux':
-            if distro in ['arch', 'manjaro', 'fedora']:
-                cmd.append('--break-system-packages')
-                print(f"{Colors.YELLOW}Usando --break-system-packages para {distro}{Colors.END}")
-            else:
-                cmd.append('--user')
-        elif sistema == 'darwin':
-            cmd.append('--user')
-        
-        cmd.extend(faltantes)
-        
-        # Intentar instalacion
-        try:
-            print(f"Ejecutando: {' '.join(cmd)}")
-            subprocess.run(cmd, check=True)
-            print(f"{Colors.GREEN}Dependencias instaladas correctamente{Colors.END}")
-            return True
-        except subprocess.CalledProcessError as e:
-            print(f"{Colors.RED}Error instalando dependencias: {e}{Colors.END}")
-            print(f"\n{Colors.YELLOW}Intentando metodo alternativo...{Colors.END}")
-            
-            # Segundo intento: solo --user
-            try:
-                cmd2 = [sys.executable, '-m', 'pip', 'install', '--user'] + faltantes
-                subprocess.run(cmd2, check=True)
-                print(f"{Colors.GREEN}Instaladas con --user{Colors.END}")
-                return True
-            except:
-                print(f"{Colors.RED}Fallo la instalacion{Colors.END}")
-                print(f"\nInstala manualmente:")
-                print(f"  pip install {' '.join(faltantes)}")
-                return False
-    
-    return True
+    except:
+        return False
 
-def verificar_archivo_keys():
-    """Verifica si existe el archivo keys.txt"""
-    if not os.path.exists('keys.txt'):
-        print(f"\n{Colors.YELLOW}No se encuentra el archivo keys.txt{Colors.END}")
+def install_pip_linux():
+    distro = get_linux_distro()
+    print(f"{Colors.YELLOW}Instalando pip en Linux ({distro})...{Colors.END}")
+    if distro == 'debian-based':
+        try:
+            subprocess.run(['sudo', 'apt', 'update'], check=False)
+            subprocess.run(['sudo', 'apt', 'install', '-y', 'python3-pip'], check=True)
+            return True
+        except:
+            return False
+    elif distro == 'arch-based':
+        try:
+            subprocess.run(['sudo', 'pacman', '-S', '--noconfirm', 'python-pip'], check=True)
+            return True
+        except:
+            return False
+    elif distro == 'fedora':
+        try:
+            subprocess.run(['sudo', 'dnf', 'install', '-y', 'python3-pip'], check=True)
+            return True
+        except:
+            return False
+    elif distro == 'centos':
+        try:
+            subprocess.run(['sudo', 'yum', 'install', '-y', 'python3-pip'], check=True)
+            return True
+        except:
+            return False
+    elif distro == 'opensuse':
+        try:
+            subprocess.run(['sudo', 'zypper', 'install', '-y', 'python3-pip'], check=True)
+            return True
+        except:
+            return False
+    return False
+
+def install_pip_windows():
+    print(f"{Colors.YELLOW}Instalando pip en Windows...{Colors.END}")
+    try:
+        subprocess.run([sys.executable, '-m', 'ensurepip', '--upgrade'], check=True)
+        return True
+    except:
+        try:
+            import urllib.request
+            urllib.request.urlretrieve('https://bootstrap.pypa.io/get-pip.py', 'get-pip.py')
+            subprocess.run([sys.executable, 'get-pip.py'], check=True)
+            os.remove('get-pip.py')
+            return True
+        except:
+            return False
+
+# ============================================================================
+# Instalación de dependencias Python (requests)
+# ============================================================================
+def check_requests():
+    try:
+        __import__('requests')
+        return True
+    except ImportError:
+        return False
+
+def install_requests():
+    """Instala la biblioteca requests usando pip con los flags adecuados"""
+    print(f"{Colors.YELLOW}Instalando requests...{Colors.END}")
+    
+    if not check_pip():
+        print(f"{Colors.RED}No se encontró pip. Instálalo primero.{Colors.END}")
+        return False
+    
+    flags = get_install_flags()
+    try:
+        cmd = get_pip_command() + ['install', 'requests'] + flags
+        subprocess.run(cmd, check=True, capture_output=True)
+        print(f"{Colors.GREEN}requests instalado correctamente.{Colors.END}")
+        return True
+    except:
+        # Intentar sin flags
+        try:
+            cmd = get_pip_command() + ['install', 'requests']
+            subprocess.run(cmd, check=True)
+            print(f"{Colors.GREEN}requests instalado correctamente.{Colors.END}")
+            return True
+        except Exception as e:
+            print(f"{Colors.RED}Error instalando requests: {e}{Colors.END}")
+            return False
+
+# ============================================================================
+# Verificación de keys.txt
+# ============================================================================
+def verificar_keys_txt():
+    """Verifica si existe el archivo keys.txt en el directorio de xonichat"""
+    xonichat_dir = get_xonichat_dir()
+    keys_path = os.path.join(xonichat_dir, 'keys.txt')
+    
+    if not os.path.exists(keys_path):
+        print(f"\n{Colors.YELLOW}⚠️ No se encuentra el archivo keys.txt{Colors.END}")
         
         # Crear archivo de ejemplo
-        with open('keys.txt', 'w') as f:
+        with open(keys_path, 'w') as f:
             f.write("# Tus API keys de Gemini (una por linea)\n")
             f.write("# Obtenlas en: https://aistudio.google.com/app/apikey\n")
+            f.write("\n")
+            f.write("# Ejemplo:\n")
             f.write("# AIzaSyCH5JpDDvI7gE87FN7iDUG5a78********\n")
             f.write("# AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********\n")
         
-        print(f"{Colors.GREEN}Archivo keys.txt creado con plantilla de ejemplo{Colors.END}")
-        print(f"\n{Colors.YELLOW}EDITA EL ARCHIVO keys.txt Y AGREGA TUS API KEYS{Colors.END}")
-        print("Presiona Enter cuando hayas configurado tus keys...")
-        input()
+        print(f"{Colors.GREEN}✓ Archivo keys.txt creado en {xonichat_dir}{Colors.END}")
+        print(f"\n{Colors.YELLOW}⚠️ EDITA EL ARCHIVO keys.txt Y AGREGA TUS API KEYS{Colors.END}")
+        print(f"{Colors.CYAN}   Puedes obtener keys gratis en: https://aistudio.google.com/app/apikey{Colors.END}")
+        
+        if get_system() != 'windows':
+            input(f"\n{Colors.YELLOW}Presiona Enter después de configurar tus keys...{Colors.END}")
         return False
     return True
 
-def verificar_importaciones():
-    """Verifica que todas las importaciones necesarias funcionen"""
-    print(f"\n{Colors.BOLD}Verificando importaciones...{Colors.END}")
-    
-    modulos = [
-        ('requests', 'requests'),
-    ]
-    
-    todos_ok = True
-    for modulo, nombre in modulos:
-        try:
-            __import__(modulo)
-            print(f"{Colors.GREEN}  - {nombre}: OK{Colors.END}")
-        except ImportError:
-            print(f"{Colors.RED}  - {nombre}: FALLO{Colors.END}")
-            todos_ok = False
-    
-    return todos_ok
+# ============================================================================
+# Verificación de xonichat.py y ejecución
+# ============================================================================
+def check_xonichat():
+    ruta, origen = get_xonichat_path()
+    existe = os.path.exists(ruta)
+    if not existe:
+        print(f"{Colors.RED}❌ No se encuentra xonichat.py{Colors.END}")
+        print(f"   Buscado en: {ruta}")
+    return existe
 
 def mostrar_ayuda():
     """Muestra ayuda de uso"""
@@ -322,7 +334,7 @@ def mostrar_ayuda():
 
 {Colors.BOLD}CARACTERISTICAS:{Colors.END}
 
-  ✅ Interfaz 100% terminal - Rapida y ligera
+  ✅ Interfaz 100%% terminal - Rapida y ligera
   ✅ Multiples API keys - Cambio automatico cuando una se agota
   ✅ Historial de conversacion - Contexto entre mensajes
   ✅ Optimizado - Funciona en ASUS Eee PC y equipos similares
@@ -344,179 +356,112 @@ def mostrar_ayuda():
     """
     print(ayuda)
 
-def crear_accesos_directos():
-    """Crea accesos directos para cada sistema"""
-    sistema = get_system()
-    
-    if sistema == 'windows':
-        # Crear .bat para Windows
-        with open('INICIAR_XONICHAT.bat', 'w') as f:
-            f.write("""@echo off
-title XONICHAT 2026 - Cliente Gemini para Terminal
-color 1F
-echo ========================================
-echo      XONICHAT 2026 - Cliente Gemini
-echo      Desarrollado por Darian Alberto
-echo ========================================
-echo.
-python start.py
-pause
-""")
-        print(f"{Colors.GREEN}Creado INICIAR_XONICHAT.bat - Haz doble clic para ejecutar{Colors.END}")
-    
-    elif sistema == 'linux':
-        # Crear .sh para Linux
-        with open('INICIAR_XONICHAT.sh', 'w') as f:
-            f.write("""#!/bin/bash
-echo "========================================"
-echo "      XONICHAT 2026 - Cliente Gemini"
-echo "      Desarrollado por Darian Alberto"
-echo "========================================"
-echo ""
-python3 start.py
-read -p "Presiona Enter para salir"
-""")
-        os.chmod('INICIAR_XONICHAT.sh', 0o755)
-        print(f"{Colors.GREEN}Creado INICIAR_XONICHAT.sh - Ejecuta con: ./INICIAR_XONICHAT.sh{Colors.END}")
-    
-    elif sistema == 'darwin':
-        # Crear .command para Mac
-        with open('INICIAR_XONICHAT.command', 'w') as f:
-            f.write("""#!/bin/bash
-cd "$(dirname "$0")"
-echo "========================================"
-echo "      XONICHAT 2026 - Cliente Gemini"
-echo "      Desarrollado por Darian Alberto"
-echo "========================================"
-echo ""
-python3 start.py
-""")
-        os.chmod('INICIAR_XONICHAT.command', 0o755)
-        print(f"{Colors.GREEN}Creado INICIAR_XONICHAT.command - Haz doble clic para ejecutar{Colors.END}")
-
 def main():
-    """Funcion principal"""
     # Limpiar pantalla
     if get_system() == 'windows':
         os.system('cls')
     else:
         os.system('clear')
     
-    # Mostrar banner
     print_banner()
     
-    # Verificar si hay argumentos de ayuda
+    # Verificar argumentos de ayuda
     if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help', '/?']:
         mostrar_ayuda()
-        input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
+        if get_system() != 'windows':
+            input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
         return
+    
+    sistema = get_system()
+    distro = get_linux_distro()
+    script_dir = get_script_dir()
+    ruta_xonichat, origen = get_xonichat_path()
+    xonichat_dir = get_xonichat_dir()
+    
+    print(f"{Colors.BOLD}Sistema operativo:{Colors.END} {sistema}")
+    if distro:
+        print(f"{Colors.BOLD}Distribución:{Colors.END} {distro}")
+    print(f"{Colors.BOLD}Directorio de start.py:{Colors.END} {script_dir}")
+    print(f"{Colors.BOLD}Origen de xonichat.py:{Colors.END} {origen}")
+    print(f"{Colors.BOLD}Ruta de xonichat.py:{Colors.END} {ruta_xonichat}")
+    
+    # Verificar que el directorio de xonichat existe, si no, crearlo (solo para ruta fija)
+    if origen == 'ninguna' and not os.path.exists(xonichat_dir):
+        print(f"\n{Colors.YELLOW}⚠️ El directorio {xonichat_dir} no existe. Creándolo...{Colors.END}")
+        os.makedirs(xonichat_dir, exist_ok=True)
+        print(f"{Colors.GREEN}✓ Directorio creado: {xonichat_dir}{Colors.END}")
     
     # Verificar Python
     if not check_python():
-        print(f"\n{Colors.RED}Error: Python no esta instalado{Colors.END}")
-        print("Instala Python desde: https://www.python.org/downloads/")
-        input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
-        return
+        print(f"\n{Colors.RED}❌ Python no está instalado o no está en el PATH.{Colors.END}")
+        sys.exit(1)
     
-    python_version = subprocess.run(get_python_command() + ['--version'], 
-                                   capture_output=True, text=True).stdout.strip()
-    print(f"{Colors.BOLD}Python:{Colors.END} {python_version}")
-    print(f"{Colors.BOLD}Directorio:{Colors.END} {os.path.dirname(os.path.abspath(__file__))}")
+    # Mostrar versión de Python
+    ver_py = subprocess.run(get_python_command() + ['--version'], capture_output=True, text=True).stdout.strip()
+    print(f"{Colors.BOLD}Python:{Colors.END} {ver_py}")
     
-    # Verificar pip e instalarlo si es necesario (solo Linux)
-    if get_system() == 'linux' and not check_pip():
-        print(f"\n{Colors.YELLOW}pip no esta instalado{Colors.END}")
-        respuesta = input("¿Deseas instalar pip automaticamente? (s/n): ")
-        if respuesta.lower() == 's':
-            if install_pip_linux():
-                print(f"{Colors.GREEN}pip instalado correctamente. Continuando...{Colors.END}")
-            else:
-                print(f"{Colors.RED}No se pudo instalar pip. Instalalo manualmente.{Colors.END}")
-                input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
-                return
+    # Verificar pip e instalarlo si falta
+    if not check_pip():
+        print(f"\n{Colors.YELLOW}⚠️ Pip no encontrado. Instalando...{Colors.END}")
+        if sistema == 'linux':
+            if not install_pip_linux():
+                print(f"{Colors.RED}No se pudo instalar pip. Instálalo manualmente.{Colors.END}")
+                sys.exit(1)
+        elif sistema == 'windows':
+            if not install_pip_windows():
+                print(f"{Colors.RED}No se pudo instalar pip. Ejecuta como administrador.{Colors.END}")
+                sys.exit(1)
         else:
-            print("No se puede continuar sin pip. Instalalo manualmente.")
-            input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
-            return
+            print(f"{Colors.YELLOW}Instala pip manualmente con: python -m ensurepip --upgrade{Colors.END}")
+            sys.exit(1)
+    else:
+        print(f"{Colors.GREEN}✓ Pip disponible{Colors.END}")
     
-    # Verificar dependencias
-    faltantes = check_dependencies()
-    
-    if faltantes:
-        print(f"\n{Colors.YELLOW}Faltan dependencias{Colors.END}")
-        respuesta = input("Instalar automaticamente? (s/n): ")
-        
-        if respuesta.lower() == 's':
-            if not install_dependencies(faltantes):
-                print(f"\n{Colors.RED}No se pudieron instalar las dependencias{Colors.END}")
-                input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
-                return
-        else:
-            print(f"\nPuedes instalarlas manualmente con:")
-            print("  pip install requests")
-            input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
-            return
-    
-    # Verificar archivo keys.txt
-    verificar_archivo_keys()
+    # Verificar e instalar requests
+    if not check_requests():
+        print(f"\n{Colors.YELLOW}⚠️ requests no encontrado. Instalando...{Colors.END}")
+        if not install_requests():
+            print(f"{Colors.RED}Fallo crítico: no se pudo instalar requests. Abortando.{Colors.END}")
+            sys.exit(1)
+    else:
+        print(f"{Colors.GREEN}✓ requests disponible{Colors.END}")
     
     # Verificar que existe xonichat.py
-    if not os.path.exists('xonichat.py'):
-        print(f"\n{Colors.RED}Error: No se encuentra xonichat.py{Colors.END}")
-        print("Asegurate de que xonichat.py esta en el mismo directorio")
-        input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
-        return
+    if not check_xonichat():
+        print(f"\n{Colors.RED}❌ Error crítico: No se encuentra xonichat.py{Colors.END}")
+        if origen == 'ninguna':
+            print(f"   Puedes copiar xonichat.py a:")
+            print(f"     - {script_dir} (donde está start.py)")
+            print(f"     - O a {get_fixed_xonichat_dir()}")
+        sys.exit(1)
     
-    # Verificar que las importaciones funcionan
-    print(f"\n{Colors.BOLD}Verificando que todo funcione...{Colors.END}")
-    if not verificar_importaciones():
-        print(f"\n{Colors.RED}Error: No se puede importar requests{Colors.END}")
-        print("El programa no puede continuar sin esta dependencia")
-        input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
-        return
+    # Verificar/crear archivo keys.txt
+    verificar_keys_txt()
     
-    print(f"\n{Colors.BOLD}Iniciando XONICHAT...{Colors.END}")
-    print(f"{Colors.BOLD}Para salir en cualquier momento:{Colors.END} Ctrl+C o escribir /salir")
-    print("-" * 60)
+    # Cambiar al directorio de xonichat.py
+    os.chdir(xonichat_dir)
+    print(f"{Colors.GREEN}✓ Cambiando al directorio: {xonichat_dir}{Colors.END}")
     
-    # EJECUTAR xonichat.py
+    # Ejecutar xonichat.py
+    print(f"\n{Colors.BOLD}🚀 Iniciando XONICHAT...{Colors.END}")
+    print(f"{Colors.CYAN}Para salir: escribe '/salir' o presiona Ctrl+C{Colors.END}")
+    print("-"*50)
     try:
         python_cmd = get_python_command()
-        cmd = python_cmd + ['xonichat.py']
-        print(f"Ejecutando: {' '.join(cmd)}")
-        print("-" * 60)
-        time.sleep(1)  # Pequeña pausa para leer el mensaje
-        
-        # Ejecutar xonichat.py
-        resultado = subprocess.run(cmd)
-        
-        if resultado.returncode != 0:
-            print(f"\n{Colors.RED}Error: xonichat.py termino con codigo {resultado.returncode}{Colors.END}")
-            
-    except FileNotFoundError:
-        print(f"\n{Colors.RED}Error: No se encuentra xonichat.py{Colors.END}")
+        subprocess.run(python_cmd + ['xonichat.py'])
     except KeyboardInterrupt:
-        print(f"\n{Colors.YELLOW}Programa detenido por el usuario{Colors.END}")
+        print(f"\n{Colors.YELLOW}🛑 Programa detenido por el usuario.{Colors.END}")
     except Exception as e:
-        print(f"\n{Colors.RED}Error ejecutando xonichat.py: {e}{Colors.END}")
+        print(f"\n{Colors.RED}❌ Error ejecutando xonichat.py: {e}{Colors.END}")
     
-    print(f"\n{Colors.BLUE}Gracias por usar XONICHAT 2026{Colors.END}")
-    print(f"{Colors.BLUE}Desarrollado por Darian Alberto Camacho Salas{Colors.END}")
-    print(f"{Colors.BLUE}#Somos XONINDU{Colors.END}")
-    
-    # Pausa al final
-    if get_system() != 'windows':
-        input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
+    print(f"\n{Colors.GREEN}Gracias por usar XONICHAT 2026{Colors.END}")
+    if sistema != 'windows':
+        input(f"{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
 
 if __name__ == '__main__':
     try:
-        # Crear accesos directos
-        crear_accesos_directos()
-        
-        # Ejecutar programa principal
         main()
     except KeyboardInterrupt:
         print(f"\n{Colors.YELLOW}Saliendo...{Colors.END}")
     except Exception as e:
         print(f"\n{Colors.RED}Error inesperado: {e}{Colors.END}")
-        input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
