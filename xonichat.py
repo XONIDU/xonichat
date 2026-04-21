@@ -29,40 +29,31 @@ class XONICHAT:
         self.setup_readline()
         self.welcome()
     
-    def get_keys_path(self):
-        """
-        Busca keys.txt en múltiples ubicaciones:
-        1. Mismo directorio que xonichat.py
-        2. /usr/share/xonichat/ (instalación AUR)
-        3. ~/xonichat/
-        4. Directorio actual
-        """
-        # Obtener directorio donde está este script (xonichat.py)
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        
-        # Opción 1: Mismo directorio que xonichat.py
-        ruta_local = os.path.join(script_dir, 'keys.txt')
-        if os.path.exists(ruta_local):
-            return ruta_local
-        
-        # Opción 2: Instalación desde AUR
-        ruta_aur = '/usr/share/xonichat/keys.txt'
-        if os.path.exists(ruta_aur):
-            return ruta_aur
-        
-        # Opción 3: Ruta fija en home del usuario
-        usuario = os.path.expanduser("~")
-        ruta_home = os.path.join(usuario, 'xonichat', 'keys.txt')
-        if os.path.exists(ruta_home):
-            return ruta_home
-        
-        # Opción 4: Directorio actual (donde se ejecuta)
-        ruta_actual = os.path.join(os.getcwd(), 'keys.txt')
-        if os.path.exists(ruta_actual):
-            return ruta_actual
-        
-        # Si no existe, devolvemos la ruta local para crear el archivo
-        return ruta_local
+	def get_keys_path(self):
+	    """Busca keys.txt priorizando ~/.xonichat/"""
+	    
+	    # Opción 1: Directorio en HOME (recomendado)
+	    home_keys = os.path.join(os.path.expanduser("~"), '.xonichat', 'keys.txt')
+	    if os.path.exists(home_keys):
+	        return home_keys
+	    
+	    # Opción 2: Mismo directorio que xonichat.py
+	    script_dir = os.path.dirname(os.path.abspath(__file__))
+	    local_keys = os.path.join(script_dir, 'keys.txt')
+	    if os.path.exists(local_keys):
+	        return local_keys
+	    
+	    # Opción 3: /usr/share/xonichat/
+	    system_keys = '/usr/share/xonichat/keys.txt'
+	    if os.path.exists(system_keys):
+	        return system_keys
+	    
+	    # Opción 4: ~/xonichat/
+	    home_legacy = os.path.join(os.path.expanduser("~"), 'xonichat', 'keys.txt')
+	    if os.path.exists(home_legacy):
+	        return home_legacy
+				    
+    	    return home_keys
     
     def setup_readline(self):
         histfile = Path.home() / ".xonichat_history"
