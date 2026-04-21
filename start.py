@@ -135,7 +135,7 @@ def print_banner():
     
     banner = f"""
 {Colors.PURPLE}{Colors.BOLD}╔══════════════════════════════════════════════════════════╗
-║                    XONICHAT 2026 v4.2.6                    ║
+║                    XONICHAT 2026 v4.2.7                    ║
 ║              Cliente Gemini para Terminal                   ║
 ║                   Optimizado para 1GB RAM                   ║
 ║                                                            ║
@@ -216,14 +216,18 @@ class XONICHAT:
         return home_keys
     
     def setup_readline(self):
-        histfile = Path.home() / ".xonichat_history"
         try:
-            readline.read_history_file(histfile)
-        except FileNotFoundError:
-            pass
-        import atexit
-        atexit.register(readline.write_history_file, histfile)
-        
+            import readline
+            histfile = Path.home() / ".xonichat_history"
+            try:
+                readline.read_history_file(histfile)
+            except FileNotFoundError:
+                pass
+            import atexit
+            atexit.register(readline.write_history_file, histfile)
+        except ImportError:
+            pass  # Windows no tiene readline
+    
     def load_keys(self):
         try:
             with open(self.keys_file, 'r') as f:

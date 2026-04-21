@@ -29,40 +29,44 @@ class XONICHAT:
         self.setup_readline()
         self.welcome()
     
-	def get_keys_path(self):
-	    """Busca keys.txt priorizando ~/.xonichat/"""
-	    
-	    # Opción 1: Directorio en HOME (recomendado)
-	    home_keys = os.path.join(os.path.expanduser("~"), '.xonichat', 'keys.txt')
-	    if os.path.exists(home_keys):
-	        return home_keys
-	    
-	    # Opción 2: Mismo directorio que xonichat.py
-	    script_dir = os.path.dirname(os.path.abspath(__file__))
-	    local_keys = os.path.join(script_dir, 'keys.txt')
-	    if os.path.exists(local_keys):
-	        return local_keys
-	    
-	    # Opción 3: /usr/share/xonichat/
-	    system_keys = '/usr/share/xonichat/keys.txt'
-	    if os.path.exists(system_keys):
-	        return system_keys
-	    
-	    # Opción 4: ~/xonichat/
-	    home_legacy = os.path.join(os.path.expanduser("~"), 'xonichat', 'keys.txt')
-	    if os.path.exists(home_legacy):
-	        return home_legacy
-				    
-    	    return home_keys
+    def get_keys_path(self):
+        """Busca keys.txt priorizando ~/.xonichat/ (sin sudo)"""
+        
+        # Opción 1: Directorio en HOME (recomendado, sin sudo)
+        home_keys = os.path.join(os.path.expanduser("~"), '.xonichat', 'keys.txt')
+        if os.path.exists(home_keys):
+            return home_keys
+        
+        # Opción 2: Mismo directorio que xonichat.py
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        local_keys = os.path.join(script_dir, 'keys.txt')
+        if os.path.exists(local_keys):
+            return local_keys
+        
+        # Opción 3: /usr/share/xonichat/ (legacy)
+        system_keys = '/usr/share/xonichat/keys.txt'
+        if os.path.exists(system_keys):
+            return system_keys
+        
+        # Opción 4: ~/xonichat/ (legacy)
+        home_legacy = os.path.join(os.path.expanduser("~"), 'xonichat', 'keys.txt')
+        if os.path.exists(home_legacy):
+            return home_legacy
+        
+        return home_keys
     
     def setup_readline(self):
-        histfile = Path.home() / ".xonichat_history"
         try:
-            readline.read_history_file(histfile)
-        except FileNotFoundError:
-            pass
-        import atexit
-        atexit.register(readline.write_history_file, histfile)
+            import readline
+            histfile = Path.home() / ".xonichat_history"
+            try:
+                readline.read_history_file(histfile)
+            except FileNotFoundError:
+                pass
+            import atexit
+            atexit.register(readline.write_history_file, histfile)
+        except ImportError:
+            pass  # Windows no tiene readline
         
     def load_keys(self):
         try:
@@ -72,13 +76,13 @@ class XONICHAT:
                     if key and not key.startswith('#'):
                         self.keys.append(key)
         except FileNotFoundError:
-            print(f"\n[ERROR] {self.keys_file} not found")
-            print("[INFO] Get your API key at: https://aistudio.google.com/app/apikey")
-            print(f"[INFO] Create keys.txt in: {os.path.dirname(self.keys_file)}")
+            print(f"\n[ERROR] No se encuentra keys.txt")
+            print("[INFO] Obten tu API key en: https://aistudio.google.com/app/apikey")
+            print(f"[INFO] Crea keys.txt en: {os.path.dirname(self.keys_file)}")
             sys.exit(1)
             
         if not self.keys:
-            print("[ERROR] No valid keys in keys.txt")
+            print("[ERROR] No hay keys validas en keys.txt")
             sys.exit(1)
             
     def welcome(self):
@@ -98,7 +102,7 @@ class XONICHAT:
         
     def switch_key(self):
         self.current_key_index = (self.current_key_index + 1) % len(self.keys)
-        print(f"\n[KEY] Switching to key {self.current_key_index + 1}/{len(self.keys)}")
+        print(f"\n[KEY] Cambiando a key {self.current_key_index + 1}/{len(self.keys)}")
         
     def make_request(self, message):
         key = self.get_current_key()
@@ -139,15 +143,15 @@ class XONICHAT:
                     self.conversation_history.append({"role": "assistant", "content": answer})
                     return answer
                 else:
-                    return "[WARNING] Empty response"
+                    return "[WARNING] Respuesta vacia"
                 
             elif response.status_code == 429:
-                print(f"\n[WARNING] Key {self.current_key_index + 1} out of quota")
+                print(f"\n[WARNING] Key {self.current_key_index + 1} sin cuota")
                 self.switch_key()
                 return None
                 
             elif response.status_code in [403, 404]:
-                print(f"\n[ERROR] Error with key {self.current_key_index + 1}")
+                print(f"\n[ERROR] Error con key {self.current_key_index + 1}")
                 if len(self.keys) > 1:
                     self.switch_key()
                 return None
@@ -157,7 +161,7 @@ class XONICHAT:
                 return None
                 
         except requests.exceptions.Timeout:
-            print("\n[TIMEOUT] Request took too long")
+            print("\n[TIMEOUT] La peticion tardo demasiado")
             return None
         except Exception as e:
             print(f"\n[ERROR] {e}")
@@ -166,7 +170,7 @@ class XONICHAT:
     def process_command(self, cmd):
         if cmd == "/salir":
             print("\nBY: XONIDU - Darian Alberto Camacho Salas")
-            print("Goodbye!")
+            print("Hasta luego!")
             sys.exit(0)
         return False
         
@@ -183,7 +187,7 @@ class XONICHAT:
                     self.process_command(message)
                     continue
                     
-                print("[...] Querying Gemini...")
+                print("[...] Consultando Gemini...")
                 
                 response = None
                 attempts = 0
@@ -198,28 +202,28 @@ class XONICHAT:
                 if response:
                     print(f"\n[G{self.current_key_index+1}]: {response}\n")
                 else:
-                    print("\n[ERROR] Could not get response")
+                    print("\n[ERROR] No se pudo obtener respuesta")
                     
             except KeyboardInterrupt:
                 print("\n\nBY: XONIDU - Darian Alberto Camacho Salas")
-                print("Goodbye!")
+                print("Hasta luego!")
                 break
             except EOFError:
                 print("\n\nBY: XONIDU - Darian Alberto Camacho Salas")
-                print("Goodbye!")
+                print("Hasta luego!")
                 break
 
 def main():
     try:
         import requests
     except ImportError:
-        print("[INFO] Installing requests...")
+        print("[INFO] Instalando requests...")
         os.system("pip3 install requests --break-system-packages")
         import requests
         
-    # Verificar si existe keys.txt en alguna ubicación
     script_dir = os.path.dirname(os.path.abspath(__file__))
     posibles_keys = [
+        os.path.join(os.path.expanduser("~"), '.xonichat', 'keys.txt'),
         os.path.join(script_dir, 'keys.txt'),
         '/usr/share/xonichat/keys.txt',
         os.path.join(os.path.expanduser("~"), 'xonichat', 'keys.txt'),
@@ -229,17 +233,17 @@ def main():
     keys_exist = any(os.path.exists(p) for p in posibles_keys)
     
     if not keys_exist:
-        # Crear en el directorio donde está xonichat.py
-        keys_path = os.path.join(script_dir, 'keys.txt')
+        home_dir = os.path.join(os.path.expanduser("~"), '.xonichat')
+        os.makedirs(home_dir, exist_ok=True)
+        keys_path = os.path.join(home_dir, 'keys.txt')
         with open(keys_path, 'w') as f:
-            f.write("# Your Gemini API keys (one per line)\n")
-            f.write("# Get them at: https://aistudio.google.com/app/apikey\n")
-            f.write("\n")
-            f.write("# Example:\n")
+            f.write("# Tus API keys de Gemini (una por linea)\n")
+            f.write("# Obtenlas en: https://aistudio.google.com/app/apikey\n\n")
+            f.write("# Ejemplo:\n")
             f.write("# AIzaSyCH5JpDDvI7gE87FN7iDUG5a78********\n")
             f.write("# AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********\n")
-        print(f"\n[INFO] Created keys.txt file in: {script_dir}")
-        print("       Put your API keys there and run again")
+        print(f"\n[INFO] Creado keys.txt en: {keys_path}")
+        print("       Agrega tus API keys y vuelve a ejecutar")
         print("       https://aistudio.google.com/app/apikey\n")
         sys.exit(0)
     
