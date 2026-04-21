@@ -111,8 +111,8 @@ def get_script_dir():
     return os.path.dirname(os.path.abspath(__file__))
 
 def get_keys_path():
-    """Detecta la ruta de keys.txt"""
-    script_dir = get_script_dir()
+    """Busca keys.txt en múltiples ubicaciones"""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
     
     rutas = [
         os.path.join(script_dir, 'keys.txt'),
@@ -125,7 +125,6 @@ def get_keys_path():
         if os.path.exists(r):
             return r
     
-    # Si no existe, devolver la ruta local
     return rutas[0]
 
 def fix_permissions(file_path):
