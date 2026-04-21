@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-XONICHAT 2026 - Lanzador Universal (Robusto)
+XONICHAT 2026 - Lanzador Universal con Gestor de Keys
 Cliente Gemini desde terminal para equipos de bajos recursos
-Incluye instalación automática de pip, requests y manejo de API keys
 Desarrollador: Darian Alberto Camacho Salas
 Organización: XONIDU
 """
@@ -111,71 +110,138 @@ def get_install_flags():
 def get_script_dir():
     return os.path.dirname(os.path.abspath(__file__))
 
-def get_xonichat_path():
-    """
-    Detecta la ruta de xonichat.py en múltiples ubicaciones posibles
-    1. Mismo directorio que start.py (instalación manual)
-    2. /usr/share/xonichat/ (instalación desde AUR)
-    3. /home/usuario/xonichat/ (ruta fija alternativa)
-    """
+def get_keys_path():
+    """Detecta la ruta de keys.txt"""
     script_dir = get_script_dir()
     
-    # Opción 1: Mismo directorio que start.py
-    ruta_local = os.path.join(script_dir, 'xonichat.py')
-    if os.path.exists(ruta_local):
-        return ruta_local
+    rutas = [
+        os.path.join(script_dir, 'keys.txt'),
+        '/usr/share/xonichat/keys.txt',
+        os.path.join(os.path.expanduser("~"), 'xonichat', 'keys.txt'),
+        os.path.join(os.getcwd(), 'keys.txt')
+    ]
     
-    # Opción 2: Instalación desde AUR
-    ruta_aur = '/usr/share/xonichat/xonichat.py'
-    if os.path.exists(ruta_aur):
-        return ruta_aur
+    for r in rutas:
+        if os.path.exists(r):
+            return r
     
-    # Opción 3: Ruta fija en home del usuario
-    usuario = os.path.expanduser("~")
-    ruta_home = os.path.join(usuario, 'xonichat', 'xonichat.py')
-    if os.path.exists(ruta_home):
-        return ruta_home
-    
-    # Opción 4: Ruta local alternativa (./xonichat.py)
-    ruta_actual = os.path.join(os.getcwd(), 'xonichat.py')
-    if os.path.exists(ruta_actual):
-        return ruta_actual
-    
-    return None
+    # Si no existe, devolver la ruta local
+    return rutas[0]
 
-def get_xonichat_dir():
-    ruta = get_xonichat_path()
-    if ruta:
-        return os.path.dirname(ruta)
-    return None
+def fix_permissions(file_path):
+    """Arregla permisos del archivo para que sea legible por el usuario actual"""
+    try:
+        # Cambiar propietario al usuario actual
+        uid = os.getuid()
+        gid = os.getgid()
+        os.chown(file_path, uid, gid)
+        # Permisos: lectura/escritura para propietario
+        os.chmod(file_path, 0o600)
+        return True
+    except Exception as e:
+        print(f"{Colors.YELLOW}⚠️ No se pudieron arreglar permisos: {e}{Colors.END}")
+        return False
 
-def print_banner():
-    sistema = get_system()
-    distro = get_linux_distro()
-    ruta_xonichat = get_xonichat_path()
-    sistema_texto = {
-        'windows': 'WINDOWS',
-        'linux': f'LINUX ({distro.upper()})' if distro else 'LINUX',
-        'darwin': 'MACOS'
-    }.get(sistema, 'DESCONOCIDO')
+def manage_keys():
+    """Gestión interactiva de API keys"""
+    keys_path = get_keys_path()
+    keys_dir = os.path.dirname(keys_path)
     
-    estado = "✅ ENCONTRADO" if ruta_xonichat else "❌ NO ENCONTRADO"
+    # Crear directorio si no existe
+    if not os.path.exists(keys_dir):
+        os.makedirs(keys_dir, exist_ok=True)
     
-    banner = f"""
-{Colors.PURPLE}{Colors.BOLD}╔══════════════════════════════════════════════════════════╗
-║                    XONICHAT 2026 v4.2.0                    ║
-║              Cliente Gemini para Terminal                   ║
-║                   Optimizado para 1GB RAM                   ║
-║                                                            ║
-║               Sistema detectado: {sistema_texto:<27} ║
-║               Estado xonichat.py: {estado:<27} ║
-║                                                            ║
-║               Desarrollado por: Darian Alberto             ║
-║                      Camacho Salas                         ║
-║                      Organización: XONIDU                  ║
-╚══════════════════════════════════════════════════════════════╝{Colors.END}
-    """
-    print(banner)
+    # Si el archivo no existe, crearlo
+    if not os.path.exists(keys_path):
+        with open(keys_path, 'w') as f:
+            f.write("# Tus API keys de Gemini (una por linea)\n")
+            f.write("# Obtenlas en: https://aistudio.google.com/app/apikey\n\n")
+        fix_permissions(keys_path)
+    
+    # Leer keys existentes
+    with open(keys_path, 'r') as f:
+        lines = f.readlines()
+    
+    keys = [line.strip() for line in lines if line.strip() and not line.startswith('#')]
+    
+    print(f"\n{Colors.CYAN}{Colors.BOLD}=== GESTOR DE API KEYS ==={Colors.END}")
+    print(f"📁 Ubicación: {keys_path}")
+    print(f"🔑 Keys activas: {len(keys)}")
+    print(f"🔗 Obtener keys: {Colors.GREEN}https://aistudio.google.com/app/apikey{Colors.END}")
+    
+    # Mostrar keys existentes
+    if keys:
+        print(f"\n{Colors.BOLD}Keys actuales:{Colors.END}")
+        for i, key in enumerate(keys, 1):
+            # Mostrar solo últimos 8 caracteres por seguridad
+            masked = key[:15] + "..." + key[-8:] if len(key) > 30 else key
+            print(f"  {i}. {masked}")
+    
+    print(f"\n{Colors.BOLD}Opciones:{Colors.END}")
+    print("  1. Agregar nueva API key")
+    print("  2. Eliminar una API key")
+    print("  3. Salir (continuar con las keys actuales)")
+    
+    opcion = input(f"\n{Colors.YELLOW}Elige una opción (1-3): {Colors.END}").strip()
+    
+    if opcion == '1':
+        nueva_key = input(f"{Colors.CYAN}Ingresa la nueva API key: {Colors.END}").strip()
+        if nueva_key and nueva_key.startswith('AIza'):
+            with open(keys_path, 'a') as f:
+                f.write(f"{nueva_key}\n")
+            fix_permissions(keys_path)
+            print(f"{Colors.GREEN}✅ Key agregada correctamente{Colors.END}")
+            time.sleep(1)
+        else:
+            print(f"{Colors.RED}❌ Key inválida. Debe comenzar con 'AIza'{Colors.END}")
+            time.sleep(1)
+    
+    elif opcion == '2':
+        if not keys:
+            print(f"{Colors.YELLOW}⚠️ No hay keys para eliminar{Colors.END}")
+            time.sleep(1)
+        else:
+            print(f"\n{Colors.BOLD}Selecciona la key a eliminar:{Colors.END}")
+            for i, key in enumerate(keys, 1):
+                masked = key[:15] + "..." + key[-8:] if len(key) > 30 else key
+                print(f"  {i}. {masked}")
+            
+            try:
+                eliminar = int(input(f"{Colors.YELLOW}Número de key a eliminar (0 = cancelar): {Colors.END}"))
+                if 1 <= eliminar <= len(keys):
+                    key_eliminada = keys.pop(eliminar - 1)
+                    # Reescribir archivo sin la key eliminada
+                    with open(keys_path, 'w') as f:
+                        f.write("# Tus API keys de Gemini (una por linea)\n")
+                        f.write("# Obtenlas en: https://aistudio.google.com/app/apikey\n\n")
+                        for key in keys:
+                            f.write(f"{key}\n")
+                    fix_permissions(keys_path)
+                    print(f"{Colors.GREEN}✅ Key eliminada correctamente{Colors.END}")
+                    time.sleep(1)
+                elif eliminar == 0:
+                    print(f"{Colors.YELLOW}Operación cancelada{Colors.END}")
+                else:
+                    print(f"{Colors.RED}❌ Número inválido{Colors.END}")
+            except ValueError:
+                print(f"{Colors.RED}❌ Entrada inválida{Colors.END}")
+    
+    print(f"{Colors.GREEN}✅ Continuando con {len(keys)} key(s)...{Colors.END}")
+    return keys_path
+
+# ============================================================================
+# Verificación de permisos
+# ============================================================================
+def check_permissions(file_path):
+    """Verifica si el archivo es legible por el usuario actual"""
+    if not os.path.exists(file_path):
+        return True
+    try:
+        with open(file_path, 'r'):
+            pass
+        return True
+    except PermissionError:
+        return False
 
 # ============================================================================
 # Verificación e instalación de pip
@@ -275,30 +341,49 @@ def install_requests():
             print(f"{Colors.RED}Error instalando requests: {e}{Colors.END}")
             return False
 
-def verificar_keys_txt():
-    xonichat_dir = get_xonichat_dir()
-    if not xonichat_dir:
-        print(f"\n{Colors.RED}❌ No se puede determinar directorio de xonichat.py{Colors.END}")
-        return False
+# ============================================================================
+# Verificación de xonichat.py y ejecución
+# ============================================================================
+def get_xonichat_path():
+    """Detecta la ruta de xonichat.py en múltiples ubicaciones"""
+    script_dir = get_script_dir()
     
-    keys_path = os.path.join(xonichat_dir, 'keys.txt')
+    rutas = [
+        os.path.join(script_dir, 'xonichat.py'),
+        '/usr/share/xonichat/xonichat.py',
+        os.path.join(os.path.expanduser("~"), 'xonichat', 'xonichat.py'),
+        os.path.join(os.getcwd(), 'xonichat.py')
+    ]
     
-    if not os.path.exists(keys_path):
-        print(f"\n{Colors.YELLOW}⚠️ No se encuentra el archivo keys.txt{Colors.END}")
-        with open(keys_path, 'w') as f:
-            f.write("# Tus API keys de Gemini (una por linea)\n")
-            f.write("# Obtenlas en: https://aistudio.google.com/app/apikey\n")
-            f.write("\n")
-            f.write("# Ejemplo:\n")
-            f.write("# AIzaSyCH5JpDDvI7gE87FN7iDUG5a78********\n")
-            f.write("# AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********\n")
-        print(f"{Colors.GREEN}✓ Archivo keys.txt creado en {xonichat_dir}{Colors.END}")
-        print(f"\n{Colors.YELLOW}⚠️ EDITA EL ARCHIVO keys.txt Y AGREGA TUS API KEYS{Colors.END}")
-        print(f"{Colors.CYAN}   Puedes obtener keys gratis en: https://aistudio.google.com/app/apikey{Colors.END}")
-        if get_system() != 'windows':
-            input(f"\n{Colors.YELLOW}Presiona Enter después de configurar tus keys...{Colors.END}")
-        return False
-    return True
+    for r in rutas:
+        if os.path.exists(r):
+            return r
+    
+    return None
+
+def print_banner():
+    sistema = get_system()
+    distro = get_linux_distro()
+    sistema_texto = {
+        'windows': 'WINDOWS',
+        'linux': f'LINUX ({distro.upper()})' if distro else 'LINUX',
+        'darwin': 'MACOS'
+    }.get(sistema, 'DESCONOCIDO')
+    
+    banner = f"""
+{Colors.PURPLE}{Colors.BOLD}╔══════════════════════════════════════════════════════════╗
+║                    XONICHAT 2026 v4.2.1                    ║
+║              Cliente Gemini para Terminal                   ║
+║                   Optimizado para 1GB RAM                   ║
+║                                                            ║
+║               Sistema detectado: {sistema_texto:<27} ║
+║                                                            ║
+║               Desarrollado por: Darian Alberto             ║
+║                      Camacho Salas                         ║
+║                      Organización: XONIDU                  ║
+╚══════════════════════════════════════════════════════════════╝{Colors.END}
+    """
+    print(banner)
 
 def mostrar_ayuda():
     ayuda = f"""
@@ -318,22 +403,16 @@ def mostrar_ayuda():
   ✅ Interfaz 100%% terminal - Rapida y ligera
   ✅ Multiples API keys - Cambio automatico cuando una se agota
   ✅ Historial de conversacion - Contexto entre mensajes
-  ✅ Optimizado - Funciona en ASUS Eee PC y equipos similares
+  ✅ Gestor interactivo de keys - Agrega o elimina keys facilmente
 
 {Colors.BOLD}COMANDOS:{Colors.END}
 
   /salir     - Terminar la conversacion
   Ctrl+C     - Salir del programa
 
-{Colors.BOLD}CONFIGURACION:{Colors.END}
+{Colors.BOLD}OBTENER API KEYS:{Colors.END}
 
-  1. Obtener API keys: https://aistudio.google.com/app/apikey
-  2. Crear archivo keys.txt con tus keys (una por linea)
-  
-{Colors.BOLD}EJEMPLO keys.txt:{Colors.END}
-  # Tus API keys de Gemini
-  AIzaSyCH5JpDDvI7gE87FN7iDUG5a78********
-  AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********
+  https://aistudio.google.com/app/apikey
     """
     print(ayuda)
 
@@ -387,20 +466,18 @@ def main():
     ruta_xonichat = get_xonichat_path()
     if not ruta_xonichat:
         print(f"\n{Colors.RED}❌ No se encuentra xonichat.py{Colors.END}")
-        print("   Buscado en:")
-        print("     - Mismo directorio que start.py")
-        print("     - /usr/share/xonichat/")
-        print("     - ~/xonichat/")
-        print("     - Directorio actual")
         sys.exit(1)
     
     xonichat_dir = os.path.dirname(ruta_xonichat)
     print(f"{Colors.GREEN}✓ xonichat.py encontrado en: {xonichat_dir}{Colors.END}")
     
-    # Verificar keys.txt
-    keys_path = os.path.join(xonichat_dir, 'keys.txt')
-    if not os.path.exists(keys_path):
-        verificar_keys_txt()
+    # Gestionar keys (preguntar al usuario)
+    keys_path = manage_keys()
+    
+    # Verificar permisos del archivo keys.txt
+    if os.path.exists(keys_path) and not check_permissions(keys_path):
+        print(f"{Colors.YELLOW}⚠️ Problemas de permisos en {keys_path}{Colors.END}")
+        fix_permissions(keys_path)
     
     # Cambiar al directorio y ejecutar
     os.chdir(xonichat_dir)
@@ -410,7 +487,7 @@ def main():
     
     try:
         python_cmd = get_python_command()
-        subprocess.run(python_cmd + ['xonichat.py'])
+        subprocess.run(python_cmd + [ruta_xonichat])
     except KeyboardInterrupt:
         print(f"\n{Colors.YELLOW}🛑 Programa detenido por el usuario.{Colors.END}")
     except Exception as e:
