@@ -23,7 +23,7 @@ class XONICHAT:
         self.conversation_history = []
         self.max_history = 50
         self.model = "gemini-2.5-flash"
-        self.api_base = "https://generativelanguage.googleapis.com/v1"
+        self.api_base = "https://generativelanguage.googleapis.com/v1beta"
         
         self.load_keys()
         self.setup_readline()
