@@ -7,16 +7,16 @@ requests
 # INSTALLATION COMMANDS
 
 # Arch Linux
-sudo pacman -S python-pip
-pip install requests --break-system-packages
+#sudo pacman -S python-pip
+#pip install requests --break-system-packages
 
 # antiX, Debian, Ubuntu and derivatives
-sudo apt update
-sudo apt install python3 python3-pip -y
-pip3 install requests --break-system-packages
+#sudo apt update
+#sudo apt install python3 python3-pip -y
+#pip3 install requests --break-system-packages
 
 # Windows
-pip install requests
+#pip install requests
 
 # HOW TO GET A FREE API KEY
 # 1. Go to: https://aistudio.google.com/app/apikey
@@ -27,10 +27,10 @@ pip install requests
 # CONFIGURATION FILE keys.txt
 # Create a keys.txt file with your API keys (one per line)
 # Example:
-# AIzaSyCH5JpDDvI7gE87FN7iDUG5a78********
-# AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********
+# TU_API_KEY_AQUI
+# TU_API_KEY_AQUI
 
 # EXECUTION
-python3 start.py
+#python3 start.py
 
 #Darian Alberto Camacho Salas

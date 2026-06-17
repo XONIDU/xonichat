@@ -49,11 +49,11 @@ Luego simplemente escribe:
 ```bash
 xoninstall xonichat
 cd xonichat
-pip install -r requisitos.txt
+pip install -r requirements.txt
 python start.py
 ```
 
-> **Nota:** Esta función te servirá para instalar cualquier otra herramienta futura de XONIDU (por ejemplo `xoninstall xonicli`).
+> **Nota:** Esta función te servirá para instalar cualquier otra herramienta futura de XONIDU (por ejemplo `xoninstall xonichat`).
 
 ---
 
