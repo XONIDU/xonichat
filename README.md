@@ -2,10 +2,6 @@
 
 Cliente Gemini por terminal optimizado para equipos de bajos recursos (ASUS Eee PC, Raspberry Pi, etc.)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![AUR version](https://img.shields.io/aur/version/xonichat)](https://aur.archlinux.org/packages/xonichat)
-
----
 
 ## 📋 Características
 
@@ -14,18 +10,19 @@ Cliente Gemini por terminal optimizado para equipos de bajos recursos (ASUS Eee 
 - ✅ Historial de conversación - Contexto entre mensajes
 - ✅ Gestor interactivo de keys - Sin necesidad de editar archivos
 - ✅ Sin sudo - Las keys se guardan en `~/.xonichat/`
+- ✅ Multiplataforma - Linux, Windows, macOS
 
 ---
 
 ## 📦 Instalación
 
-### Desde AUR (recomendado)
+### 🐧 Linux (Arch Linux / AUR - recomendado)
 
 ```bash
 yay -S xonichat
 ```
 
-### Manual desde GitHub
+### 🐧 Linux (manual desde GitHub)
 
 ```bash
 git clone https://github.com/XONIDU/xonichat.git
@@ -34,26 +31,40 @@ pip install -r requirements.txt
 python start.py
 ```
 
----
+### 🪟 Windows
 
-### Opción 2 – Comando `xoninstall` (recomendado para futuras herramientas XONI)
+#### Opción 1: Usar el script (recomendado)
 
-Agrega la siguiente función a tu `~/.bashrc` con un solo comando:
+1. Descarga o clona el repositorio:
+   ```bash
+   git clone https://github.com/XONIDU/xonichat.git
+   cd xonichat
+   ```
+2. Ejecuta `XONICHAT.bat` (con permisos de administrador) o `INICIAR_XONICHAT.bat` (sin permisos).
+
+#### Opción 2: Manual
+
+1. Instala Python 3 desde [python.org](https://python.org)
+2. Abre una terminal (cmd o PowerShell) en la carpeta del proyecto
+3. Instala dependencias:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Ejecuta:
+   ```bash
+   python start.py
+   ```
+
+> **Nota:** En Windows, las keys se guardan en `%USERPROFILE%\.xonichat\keys.txt`
+
+### 🍎 macOS
 
 ```bash
-echo 'xoninstall() { if [ -z "$1" ]; then echo "Uso: xoninstall <repo>"; echo "Ej: xoninstall xoniran"; else git clone "https://github.com/XONIDU/$1.git"; fi; }' >> ~/.bashrc && source ~/.bashrc && echo "✅ Listo. Usa: xoninstall xonicli"
-```
-
-Luego simplemente escribe:
-
-```bash
-xoninstall xonichat
+git clone https://github.com/XONIDU/xonichat.git
 cd xonichat
-pip install -r requirements.txt
-python start.py
+pip3 install -r requirements.txt
+python3 start.py
 ```
-
-> **Nota:** Esta función te servirá para instalar cualquier otra herramienta futura de XONIDU (por ejemplo `xoninstall xonichat`).
 
 ---
 
@@ -149,6 +160,7 @@ python start_test.py
 | `Permission denied` | Usa `~/.xonichat/keys.txt`, no `/usr/share/` |
 | `No module 'requests'` | `pip install requests` |
 | Error 404 o 400 | Verifica tu conexión a Internet |
+| En Windows no reconoce `python` | Asegúrate de agregar Python al PATH |
 
 ---
 
@@ -166,3 +178,4 @@ MIT © Darian Alberto Camacho Salas (XONIDU)
 
 ---
 
+**Consulta de Gemini desde Terminal** 🚀
