@@ -463,9 +463,9 @@ def manage_keys():
     keys = [line.strip() for line in lines if line.strip() and not line.startswith('#')]
     
     print(f"\n{Colors.CYAN}{Colors.BOLD}=== GESTOR DE API KEYS ==={Colors.END}")
-    print(f"📁 Ubicación: {keys_path}")
-    print(f"🔑 Keys activas: {len(keys)}")
-    print(f"🔗 Obtener keys: {Colors.GREEN}https://aistudio.google.com/app/apikey{Colors.END}")
+    print(f"Ubicación: {keys_path}")
+    print(f"Keys activas: {len(keys)}")
+    print(f"Obtener keys: {Colors.GREEN}https://aistudio.google.com/app/apikey{Colors.END}")
     
     if keys:
         print(f"\n{Colors.BOLD}Keys actuales:{Colors.END}")
