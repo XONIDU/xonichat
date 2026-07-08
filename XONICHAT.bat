@@ -3,35 +3,39 @@ title XONICHAT 2026 - Cliente Gemini para Terminal
 color 0A
 
 :: ============================================================
-:: SOLICITAR PERMISOS DE ADMINISTRADOR
+:: IR AL DIRECTORIO DONDE ESTA EL SCRIPT .BAT
 :: ============================================================
-net session >nul 2>&1
-if %errorlevel% neq 0 (
-    echo Solicitando permisos de administrador...
+cd /d "%~dp0"
+
+:: ============================================================
+:: VERIFICAR QUE start.py EXISTE
+:: ============================================================
+if not exist "%~dp0start.py" (
+    echo [ERROR] No se encuentra start.py en esta carpeta
     echo.
-    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
-    echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\getadmin.vbs"
-    "%temp%\getadmin.vbs"
-    del "%temp%\getadmin.vbs"
+    echo Ruta actual: %~dp0
+    echo.
+    echo Asegurate de que start.py esta en la misma carpeta que este .bat
+    echo.
+    pause
     exit /B
 )
 
 :: ============================================================
-:: EJECUTAR start.py CON PERMISOS DE ADMINISTRADOR
+:: EJECUTAR start.py
 :: ============================================================
 cls
 echo ============================================================
 echo           XONICHAT 2026 - Cliente Gemini
-echo              (Modo Administrador)
 echo ============================================================
 echo.
-echo [OK] Permisos de administrador obtenidos
+echo [INFO] Directorio de trabajo: %~dp0
 echo.
 echo Iniciando XONICHAT...
 echo.
 echo [INFO] Cliente Gemini optimizado para equipos de bajos recursos
 echo [INFO] Modelo: gemini-2.5-flash
-echo [INFO] Las API keys se guardan en: %USERPROFILE%\.xonichat\keys.txt
+echo [INFO] API keys: %USERPROFILE%\.xonichat\keys.txt
 echo.
 echo [COMANDOS]
 echo   Escribe tu mensaje y presiona Enter
