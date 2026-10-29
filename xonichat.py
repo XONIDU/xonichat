@@ -42,7 +42,6 @@ class Colors:
     
     @staticmethod
     def supports_color():
-        """Verifica si la terminal soporta colores"""
         if platform.system() == 'Windows':
             try:
                 import ctypes
@@ -53,7 +52,6 @@ class Colors:
         return True
 
 
-# Desactivar colores si no hay soporte
 if platform.system() == 'Windows' and not Colors.supports_color():
     for attr in dir(Colors):
         if not attr.startswith('_') and attr != 'supports_color':
@@ -75,7 +73,6 @@ class XONICHAT:
         self.model = "gemini-2.5-flash"
         self.api_base = "https://generativelanguage.googleapis.com/v1beta"
         
-        # Crear directorio de keys si no existe
         self.ensure_keys_dir()
         
         self.load_keys()
@@ -85,28 +82,23 @@ class XONICHAT:
     def get_keys_path(self):
         """Busca keys.txt priorizando ~/.xonichat/ (sin sudo)"""
         
-        # Opción 1: Directorio en HOME (recomendado, sin sudo)
         home_keys = os.path.join(self.user_home, '.xonichat', 'keys.txt')
         if os.path.exists(home_keys):
             return home_keys
         
-        # Opción 2: Mismo directorio que el script
         script_dir = os.path.dirname(os.path.abspath(__file__))
         local_keys = os.path.join(script_dir, 'keys.txt')
         if os.path.exists(local_keys):
             return local_keys
         
-        # Opción 3: /usr/share/xonichat/ (legacy, solo Linux)
         if self.is_linux:
             system_keys = '/usr/share/xonichat/keys.txt'
             if os.path.exists(system_keys):
                 return system_keys
         
-        # Si no existe, devolver ruta en HOME
         return home_keys
     
     def ensure_keys_dir(self):
-        """Asegura que el directorio de keys existe"""
         keys_dir = os.path.dirname(self.keys_file)
         if not os.path.exists(keys_dir):
             try:
@@ -118,10 +110,8 @@ class XONICHAT:
         return True
     
     def setup_readline(self):
-        """Configura readline si está disponible"""
         if not READLINE_AVAILABLE:
             return
-        
         try:
             histfile = Path.home() / ".xonichat_history"
             try:
@@ -133,9 +123,37 @@ class XONICHAT:
         except Exception:
             pass
     
+    def is_valid_key_format(self, key):
+        """Valida el formato de una key de Gemini - flexible para múltiples formatos"""
+        if not key:
+            return False
+        
+        key = key.strip()
+        if len(key) < 20:
+            return False
+        
+        # Formatos aceptados de API keys de Google:
+        # - AIzaSy... (formato clásico)
+        # - AQ.Ab8RN... (formato nuevo 2025)
+        # - Cualquier key que tenga al menos 20 caracteres alfanuméricos
+        formatos_validos = [
+            key.startswith('AIza'),
+            key.startswith('AQ.'),
+            key.startswith('AQ'),
+        ]
+        
+        if any(formatos_validos):
+            return True
+        
+        # Fallback: aceptar cualquier key con caracteres alfanuméricos, guiones y puntos
+        import re
+        if re.match(r'^[A-Za-z0-9_.\-]+$', key):
+            return True
+        
+        return False
+    
     def load_keys(self):
-        """Carga las API keys desde el archivo"""
-        # Si el archivo no existe, crearlo con instrucciones
+        """Carga las API keys desde el archivo con validación flexible"""
         if not os.path.exists(self.keys_file):
             self.create_keys_template()
             print(f"\n{Colors.YELLOW}[INFO] No se encontró keys.txt{Colors.END}")
@@ -144,7 +162,6 @@ class XONICHAT:
             print(f"[INFO] Obtén tus keys en: {Colors.CYAN}https://aistudio.google.com/app/apikey{Colors.END}\n")
             sys.exit(1)
         
-        # Cargar keys
         try:
             with open(self.keys_file, 'r', encoding='utf-8') as f:
                 for line in f:
@@ -156,18 +173,17 @@ class XONICHAT:
             print(f"[ERROR] {e}")
             sys.exit(1)
         
-        # Validar keys
         if not self.keys:
             print(f"\n{Colors.YELLOW}[WARNING] No hay keys validas en keys.txt{Colors.END}")
             print(f"[INFO] Agrega tus API keys en: {self.keys_file}")
             print(f"[INFO] Obtén tus keys en: {Colors.CYAN}https://aistudio.google.com/app/apikey{Colors.END}\n")
             sys.exit(1)
         
-        # Validar formato de keys
+        # Validar con formato flexible
         valid_keys = []
         invalid_keys = []
         for key in self.keys:
-            if key.startswith('AIzaSy') and len(key) > 20:
+            if self.is_valid_key_format(key):
                 valid_keys.append(key)
             else:
                 invalid_keys.append(key)
@@ -179,11 +195,13 @@ class XONICHAT:
         
         if not self.keys:
             print(f"\n{Colors.RED}[ERROR] No hay keys válidas{Colors.END}")
-            print(f"[INFO] Las keys deben comenzar con 'AIzaSy'")
+            print(f"[INFO] Formatos aceptados:")
+            print(f"  - AIzaSy... (formato clásico)")
+            print(f"  - AQ.Ab8RN... (formato nuevo 2025)")
+            print(f"[INFO] Obtén tus keys en: {Colors.CYAN}https://aistudio.google.com/app/apikey{Colors.END}")
             sys.exit(1)
     
     def create_keys_template(self):
-        """Crea un archivo keys.txt con instrucciones"""
         keys_dir = os.path.dirname(self.keys_file)
         if not os.path.exists(keys_dir):
             os.makedirs(keys_dir, exist_ok=True)
@@ -196,18 +214,18 @@ class XONICHAT:
             f.write("# INSTRUCCIONES:\n")
             f.write("# 1. Ve a: https://aistudio.google.com/app/apikey\n")
             f.write("# 2. Inicia sesión con tu cuenta Google\n")
-            f.write("# 3. Crea una nueva API key (comienza con AIzaSy...)\n")
+            f.write("# 3. Crea una nueva API key\n")
             f.write("# 4. Copia la key y pégala en este archivo (una por línea)\n")
+            f.write("#\n")
+            f.write("# Formatos aceptados:\n")
+            f.write("#   - AIzaSy... (formato clásico)\n")
+            f.write("#   - AQ.Ab8RN... (formato nuevo 2025)\n")
             f.write("#\n")
             f.write("# Las líneas que comienzan con # son ignoradas\n")
             f.write("# ============================================================\n\n")
-            f.write("# Ejemplo (reemplaza con tus propias keys):\n")
-            f.write("# AIzaSyCH5JpDDvI7gE87FN7iDUG5a78********\n")
-            f.write("# AIzaSyDYOETiQqB7od-Mzs_qC99vk9n********\n\n")
             f.write("# === TUS API KEYS AQUÍ ===\n")
     
     def welcome(self):
-        """Muestra el banner de bienvenida"""
         os.system('cls' if self.is_windows else 'clear')
         print("=" * 60)
         print("                     XONICHAT")
@@ -221,13 +239,11 @@ class XONICHAT:
         print("")
     
     def get_current_key(self):
-        """Obtiene la key activa actual"""
         if not self.keys:
             return None
         return self.keys[self.current_key_index]
     
     def switch_key(self):
-        """Cambia a la siguiente key disponible"""
         if len(self.keys) <= 1:
             print(f"\n{Colors.RED}[ERROR] Solo hay una key disponible{Colors.END}")
             return False
@@ -238,7 +254,6 @@ class XONICHAT:
         return True
     
     def make_request(self, message):
-        """Realiza una petición a la API de Gemini"""
         if not self.keys:
             print(f"\n{Colors.RED}[ERROR] No hay keys disponibles{Colors.END}")
             return None
@@ -247,7 +262,6 @@ class XONICHAT:
         url = f"{self.api_base}/models/{self.model}:generateContent?key={key}"
         headers = {"Content-Type": "application/json"}
         
-        # Construir contenido con historial
         contents = []
         for msg in self.conversation_history[-self.max_history:]:
             contents.append({
@@ -318,7 +332,6 @@ class XONICHAT:
             return None
     
     def process_command(self, cmd):
-        """Procesa comandos especiales"""
         if cmd in ["/salir", "/exit", "/quit"]:
             print(f"\n{Colors.CYAN}BY: XONIDU - Darian Alberto Camacho Salas{Colors.END}")
             print(f"{Colors.CYAN}¡Hasta luego!{Colors.END}")
@@ -336,7 +349,6 @@ class XONICHAT:
         return False
     
     def show_help(self):
-        """Muestra la ayuda"""
         help_text = f"""
 {Colors.BOLD}COMANDOS DISPONIBLES:{Colors.END}
   {Colors.CYAN}/salir{Colors.END}   - Terminar la conversación
@@ -352,11 +364,14 @@ class XONICHAT:
 {Colors.BOLD}CONFIGURACIÓN:{Colors.END}
   Archivo de keys: {self.keys_file}
   Modelo: {self.model}
+
+{Colors.BOLD}FORMATOS DE KEY ACEPTADOS:{Colors.END}
+  - AIzaSy... (formato clásico)
+  - AQ.Ab8RN... (formato nuevo 2025)
 """
         print(help_text)
     
     def run(self):
-        """Bucle principal del programa"""
         while True:
             try:
                 if not self.keys:
